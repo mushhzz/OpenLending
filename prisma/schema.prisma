@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  applications  LoanApplication[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  azureAdId     String    @unique
+}
+
+model LoanApplication {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  loanType      String
+  amount        Float
+  term          Int
+  status        String    @default("PENDING")
+  documents     Document[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Australian-specific fields
+  tfn           String?   // Tax File Number
+  abnAcn        String?   // ABN/ACN for business loans
+  propertyState String?   // Australian state
+}
+
+model Document {
+  id                String          @id @default(cuid())
+  applicationId     String
+  application       LoanApplication @relation(fields: [applicationId], references: [id])
+  type             String
+  blobUrl          String          // Azure Blob Storage URL
+  createdAt        DateTime        @default(now())
+}
